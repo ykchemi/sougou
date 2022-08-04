@@ -17,10 +17,12 @@
 
 
 import tkinter as tk
+from turtle import back
 import PySimpleGUI as sg
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+import japanize_matplotlib
 import matplotlib.backends.backend_tkagg as tkagg
 
 import pickle
@@ -54,9 +56,35 @@ configure_col_added_or_subtracted_word = sg.Input(
     key='added_or_subtracted_word'
 )
 
+configure_col_calculating_mode_description = sg.Text(
+    text='加減モード変換',
+    text_color='#000000',
+    background_color='#FFFFFF'
+)
+
+mode_adding = '+'
+mode_subtracting = '-'
+configure_col_calculating_mode = sg.Combo(
+    [mode_adding, mode_subtracting],
+    default_value=mode_adding,
+    readonly=True,
+    background_color='white',
+    text_color='#000000',
+    size=(50, 1),
+    enable_events=True,
+    key='calculating_mode'
+)
+
+configure_col_reflecting_configure = sg.Button(
+    button_text='計算を実行',
+    button_color=('#FFFFFF', '#28af9b'),
+    key='reflect_configure'
+)
+
 configure_col = [
     [configure_col_first_word_description, configure_col_first_word],
-    [configure_col_added_or_subtracted_word_description, configure_col_added_or_subtracted_word]
+    [configure_col_added_or_subtracted_word_description, configure_col_added_or_subtracted_word],
+    [configure_col_calculating_mode_description, configure_col_calculating_mode]
 ]
 
 
