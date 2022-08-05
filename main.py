@@ -82,7 +82,7 @@ configure_col_length_of_displayed_results_description = sg.Text(
 )
 
 configure_col_length_of_displayed_results = sg.Input(
-    default_text='10',
+    default_text='3',
     disabled=False,
     key='max_length_of_displayed_results'
 )
@@ -93,10 +93,19 @@ configure_col_reflecting_configure = sg.Button(
     key='reflect_configure'
 )
 
+configure_col_clear_canvas = sg.Button(
+    button_text='クリア',
+    button_color=('#FFFFFF', '#28af9b'),
+    key='clear_canvas'
+)
+
 configure_col = [
     [configure_col_first_word_description, configure_col_first_word],
     [configure_col_added_or_subtracted_word_description, configure_col_added_or_subtracted_word],
-    [configure_col_calculating_mode_description, configure_col_calculating_mode]
+    [configure_col_calculating_mode_description, configure_col_calculating_mode],
+    [configure_col_length_of_displayed_results_description, configure_col_length_of_displayed_results],
+    [configure_col_reflecting_configure],
+    [configure_col_clear_canvas]
 ]
 
 
@@ -107,17 +116,17 @@ graph_col_description = sg.Text(
     background_color='#FFFFFF'
 )
 
-canvas_size_x = 500
-canvas_size_y = 500
+canvas_size_x = 900
+canvas_size_y = 700
 
-graph_col = sg.Canvas(
+graph_col_canvas = sg.Canvas(
     size=(canvas_size_x, canvas_size_y),
     background_color="#FFFFFF",
     key='canvas'
 )
 
 graph_col = [
-    [graph_col],
+    [graph_col_canvas],
     [graph_col_description]
 ]
 
@@ -141,6 +150,11 @@ window = sg.Window(
 window.finalize()
 
 
+configure_col_reflecting_configure.bind('<Button>', '_click')
+configure_col_clear_canvas.bind('<Button>', '_click')
+
+
+
 new_model_path = 'model.pkl'
 
 with open(new_model_path, 'rb') as f:
@@ -153,7 +167,15 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
     nodes = pre_net.nodes()
 
     if len(nodes) == 0:
-        pre_net.add_node(node)
+        pre_net.add_node(node, color='#e8e3e3')
+
+    if mode == mode_adding:
+        w = '+' + calculated_word + '_' + node
+    elif mode == mode_subtracting:
+        w = '-' + calculated_word + '_' + node
+
+    pre_net.add_node(w, color='#b9ebe3')
+    pre_net.add_edge(node, w)
 
     if mode == mode_adding:
         results = model.most_similar(
@@ -170,17 +192,28 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
         results = None
 
     nodes_set = set(nodes)
-    results_values = [i[0] for i in results]
+    results_values = [i[0].replace('#', '') for i in results]
     results_values_set = set(results_values)
     elements_intersection = nodes_set & results_values_set
 
     intersection_deleted_list = [i for i in results_values_set if i not in elements_intersection]
 
-    pre_net.add_nodes_from(intersection_deleted_list)
+    pre_net.add_nodes_from(intersection_deleted_list, color='#e8e3e3')
 
-    edge_list = [(node, i) for i in results_values]
+    print(pre_net.nodes.data())
+    nc = [pre_net.nodes[node]['color'] for node in pre_net.nodes()]
+
+    
+    
+    edge_list = [[w, i] for i in results_values]
 
     pre_net.add_edges_from(edge_list)
+
+    pos = nx.spring_layout(pre_net)
+
+    plt.cla()
+
+    nx.draw_networkx(pre_net, font_family='Yu Gothic', labels={node: node for node in pre_net.nodes()}, node_color=nc)
 
     return pre_net
 
@@ -191,8 +224,13 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
 
 
 #figure kanren
-fig = plt.figure(figsize=(5, 5))
+fig = plt.figure(figsize=(canvas_size_x / 100, canvas_size_y / 100))
 ax = fig.add_subplot(111)
+canvas = graph_col_canvas.TKCanvas
+
+figure_cv = tkagg.FigureCanvasTkAgg(fig, canvas)
+figure_cv.draw()
+figure_cv.get_tk_widget().pack()
 
 
 
@@ -205,6 +243,22 @@ def main():
         event, values = window.read()
         if event == sg.WIN_CLOSED:
             break
+
+        elif event == 'reflect_configure_click':
+            G = makeNerworks(
+                G,
+                values['first_word'],
+                int(values['max_length_of_displayed_results']),
+                values['calculating_mode'],
+                values['added_or_subtracted_word']
+            )
+            figure_cv.draw()
+
+        elif event == 'clear_canvas_click':
+            plt.cla()
+            figure_cv.draw()
+            G = nx.DiGraph()
+
 
 
     window.close()
