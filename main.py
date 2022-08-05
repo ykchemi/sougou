@@ -13,6 +13,20 @@
 
 '''
 
+'''
+  _____ ______ _____ _____ 
+ / ____|  ____/ ____/ ____|
+| (___ | |__ | |   | |     
+ \___ \|  __|| |   | |     
+ ____) | |   | |___| |____ 
+|_____/|_|    \_____\_____|
+
+This project was ported to SFCC (Suwa Futaba Chemsitry Club) from ykchemi.
+
+This program is released under the following conditions: MIT License
+
+'''
+
 
 
 
