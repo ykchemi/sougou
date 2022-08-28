@@ -31,9 +31,9 @@ This program is released under the following conditions: MIT License
 
 
 import tkinter as tk
-from turtle import back
 import PySimpleGUI as sg
 import numpy as np
+import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 import japanize_matplotlib
@@ -113,16 +113,34 @@ configure_col_clear_canvas = sg.Button(
     key='clear_canvas'
 )
 
+configure_col_output_file_name_description = sg.Text(
+    text='出力するファイル名',
+    text_color='#000000',
+    background_color='#FFFFFF'
+)
+
+configure_col_output_file_name = sg.Input(
+    default_text='data.csv',
+    disabled=False,
+    key='output_file_name'
+)
+
+configure_col_write_data_as_csv = sg.Button(
+    button_text='結果をCSVとして出力',
+    button_color=('FFFFFF', '#28af9b'),
+    key='write_as_csv'
+)
+
 configure_col = [
     [configure_col_first_word_description, configure_col_first_word],
     [configure_col_added_or_subtracted_word_description, configure_col_added_or_subtracted_word],
     [configure_col_calculating_mode_description, configure_col_calculating_mode],
     [configure_col_length_of_displayed_results_description, configure_col_length_of_displayed_results],
     [configure_col_reflecting_configure],
-    [configure_col_clear_canvas]
+    [configure_col_clear_canvas],
+    [configure_col_output_file_name_description, configure_col_output_file_name],
+    [configure_col_write_data_as_csv]
 ]
-
-
 
 graph_col_description = sg.Text(
     text='言葉の関係をグラフ化',
@@ -166,10 +184,13 @@ window.finalize()
 
 configure_col_reflecting_configure.bind('<Button>', '_click')
 configure_col_clear_canvas.bind('<Button>', '_click')
+configure_col_write_data_as_csv.bind('<Button>', '_click')
 
 
 
 new_model_path = 'model.pkl'
+
+relay_color = '#e8e3e3'
 
 with open(new_model_path, 'rb') as f:
     model = pickle.load(f)
@@ -181,7 +202,7 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
     nodes = pre_net.nodes()
 
     if len(nodes) == 0:
-        pre_net.add_node(node, color='#e8e3e3')
+        pre_net.add_node(node, color=relay_color)
 
     if mode == mode_adding:
         w = '+' + calculated_word + '_' + node
@@ -212,7 +233,7 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
 
     intersection_deleted_list = [i for i in results_values_set if i not in elements_intersection]
 
-    pre_net.add_nodes_from(intersection_deleted_list, color='#e8e3e3')
+    pre_net.add_nodes_from(intersection_deleted_list, color=relay_color)
 
     print(pre_net.nodes.data())
     nc = [pre_net.nodes[node]['color'] for node in pre_net.nodes()]
@@ -231,6 +252,13 @@ def makeNerworks(pre_net, node, results_length, mode, calculated_word):
 
     return pre_net
 
+
+def write_data_as_csv(graph_data):
+    labels = ['初期ワード', '加減モード', '加減ワード', '計算結果']
+    nodes = list(graph_data.nodes(data='color', default='#FFFFFF'))
+    edges = list(graph_data.edges())
+    detect_green = [1 if i[2] == relay_color else 0 for i in nodes]
+    calculated_word_and_connected_word = {i:j for i, j in zip()}
 
 
 
@@ -272,6 +300,10 @@ def main():
             plt.cla()
             figure_cv.draw()
             G = nx.DiGraph()
+
+        elif event == 'write_as_csv':
+            write_data_as_csv()
+
 
 
 
